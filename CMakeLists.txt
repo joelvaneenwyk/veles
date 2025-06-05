@@ -28,15 +28,17 @@ file(GLOB GLSL_FILES "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
 
 # Custom command to compile GLSL shaders to .glsl.o using glslangValidator and bin2o
 set(GLSL_O_FILES "")
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/glsl)
 foreach(GLSL ${GLSL_FILES})
-    get_filename_component(GLSL_NAME ${GLSL} NAME_WE)
-    set(O_FILE "${CMAKE_BINARY_DIR}/${GLSL_NAME}.glsl.o")
+    get_filename_component(GLSL_BASENAME ${GLSL} NAME)
+    string(REPLACE "." "_" GLSL_OBJNAME ${GLSL_BASENAME})
+    set(O_FILE "${CMAKE_BINARY_DIR}/glsl/${GLSL_OBJNAME}.o")
     add_custom_command(
         OUTPUT ${O_FILE}
         COMMAND glslangValidator ${GLSL}
-        COMMAND bin2o -t -l${GLSL_NAME} -i${GLSL} -o${O_FILE}
+        COMMAND bin2o -t -l${GLSL_OBJNAME} -i${GLSL} -o${O_FILE}
         DEPENDS ${GLSL}
-        COMMENT "Compiling GLSL shader ${GLSL_NAME}.glsl"
+        COMMENT "Compiling GLSL shader ${GLSL_BASENAME}"
     )
     list(APPEND GLSL_O_FILES ${O_FILE})
 endforeach()
