@@ -26,11 +26,11 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
 file(GLOB SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.c")
 file(GLOB GLSL_FILES "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
 
-# Custom command to compile GLSL shaders to .o using glslangValidator and bin2o
+# Custom command to compile GLSL shaders to .glsl.o using glslangValidator and bin2o
 set(GLSL_O_FILES "")
 foreach(GLSL ${GLSL_FILES})
     get_filename_component(GLSL_NAME ${GLSL} NAME_WE)
-    set(O_FILE "${CMAKE_BINARY_DIR}/${GLSL_NAME}.o")
+    set(O_FILE "${CMAKE_BINARY_DIR}/${GLSL_NAME}.glsl.o")
     add_custom_command(
         OUTPUT ${O_FILE}
         COMMAND glslangValidator ${GLSL}

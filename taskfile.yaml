@@ -6,9 +6,6 @@ tasks:
   default:
     cmds:
       - cmd: |
-          if [ -f build/CMakeCache.txt ]; then 
-            rm -rf build; 
-          fi
-          cmake -B build -S .
+          cmake -B build -S . || { rm -rf build && cmake -B build -S .; }
       - cmd: |
           cmake --build build
