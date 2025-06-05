@@ -5,11 +5,13 @@
 #include <sys/stat.h>
 #include <math.h>
 
+#include <GL/glew.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
 #include <GL/gl.h>
-#include <GL/glew.h>
 #include <GL/glut.h>
 int glew_initialized = 0;
 #ifndef M_PI
@@ -154,9 +156,9 @@ void display_func(void)
 	glUseProgram(shader);
 	glUniform1i(shader_tex_intensity, 0);
 	glUniform1i(shader_tex_pos, 1);
-	glUniform1f(shader_gain, gain / div);
-	glUniform1f(shader_power, power / 1000.0);
-	glUniform1i(shader_palette, palette);
+        glUniform1f(shader_gain, (GLfloat)(gain / div));
+        glUniform1f(shader_power, (GLfloat)(power / 1000.0));
+        glUniform1i(shader_palette, palette);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, tex_intensity);
@@ -167,11 +169,11 @@ void display_func(void)
 	glUniformMatrix4fv(shader_view, 1, 0, rotmtx.a);
 
 	for(unsigned int i = 0; i <= LAYERS; i++) {
-		float z = i / (double) LAYERS;
-		glUniform1f(shader_depth, z);
+          float z = (float)(i / (double)LAYERS);
+          glUniform1f(shader_depth, z);
 
-		glBindVertexArray(quad_vao);
-		glDrawArrays(GL_TRIANGLES, 0, QUAD_VTX_CNT);
+          glBindVertexArray(quad_vao);
+          glDrawArrays(GL_TRIANGLES, 0, QUAD_VTX_CNT);
 	}
 
 	GL_ERROR();
@@ -327,7 +329,7 @@ static int cmp_u64(const void* a, const void* b)
 {
 	s64* x = (s64*) a;
 	s64* y = (s64*) b;
-	return *x - *y;
+        return (int)((*x > *y) - (*x < *y));
 }
 
 int main(int argc, char** argv)
@@ -337,9 +339,9 @@ int main(int argc, char** argv)
   if (argc != 2) {
     printf("Usage: %s file\n", *argv);
     return 1;
-	}
+  }
 
-	glutInit(&argc, argv);
+        glutInit(&argc, argv);
 
         // Create window before initializing GLEW
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -355,11 +357,11 @@ int main(int argc, char** argv)
         }
         glew_initialized = 1;
 
-        const char* filename = argv[1];
+        const char *filename = argv[1];
 
-	long start_time = glutGet(GLUT_ELAPSED_TIME);
+        long start_time = glutGet(GLUT_ELAPSED_TIME);
 
-	u64* frequencies = (u64*) malloc(SIZE * SIZE * SIZE * sizeof(u64));
+        u64* frequencies = (u64*) malloc(SIZE * SIZE * SIZE * sizeof(u64));
 	u64* upos = (u64*) malloc(SIZE * SIZE * SIZE * sizeof(u64));
 	positions = (float*) malloc(SIZE * SIZE * SIZE * sizeof(float));
 	intensities = (float*) malloc(SIZE * SIZE * SIZE * sizeof(float));
@@ -426,9 +428,14 @@ int main(int argc, char** argv)
 			for(unsigned int x = 0; x < SIZE; x++) {
 				/* size_t idx = x + (y + z * SIZE) * SIZE; */
 				/* positions[idx] /= frequencies[idx]; */
-				positions[idx] = (double) upos[idx] / (double) (statbuf.st_size * frequencies[idx]);
-				intensities[idx] = (double) frequencies[idx] / (medfreq * 64);
-				idx++;
+                                positions[idx] =
+                                    (float)((double)upos[idx] /
+                                            (double)(statbuf.st_size *
+                                                     frequencies[idx]));
+                                intensities[idx] =
+                                    (float)((double)frequencies[idx] /
+                                            (medfreq * 64));
+                                idx++;
 			}
 		}
 	}
@@ -439,15 +446,16 @@ int main(int argc, char** argv)
 	long qsort_dt = qsort_end_time - qsort_start_time;
 	printf("Median time: %ld ms\n", qsort_dt);
 
-	printf("Max: %lu, median: %lu\n", maxfreq, medfreq);
+        printf("Max: %llu, median: %llu\n", (unsigned long long)maxfreq,
+               (unsigned long long)medfreq);
 
-	free(frequencies);
+        free(frequencies);
 	free(upos);
 
         glutIgnoreKeyRepeat(1);
         glutDisplayFunc(display_func);
-	glutKeyboardFunc(kb_func);
-	glutSpecialFunc(special_func);
+        glutKeyboardFunc(kb_func);
+        glutSpecialFunc(special_func);
 	glutMouseFunc(mouse_func);
 	glutMotionFunc(motion_func);
 
