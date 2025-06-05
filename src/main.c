@@ -8,8 +8,14 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <GL/gl.h>
 #include <GL/glut.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #include "types.h"
 #include "shader.h"
