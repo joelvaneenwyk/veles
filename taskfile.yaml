@@ -1,16 +1,16 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 tasks:
   default:
     cmds:
       - cmd: |
-          VCPKG_BIN="$(which vcpkg)"
-          VCPKG_ROOT="$(dirname "$VCPKG_BIN")/../apps/vcpkg/current"
+          export VCPKG_BIN="$(which vcpkg)"
+          export VCPKG_ROOT="$(dirname "$VCPKG_BIN")/../apps/vcpkg/current"
           if ! cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"; then
             rm -rf build
             cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
           fi
       - cmd: |
-          cmake --build build    
+          cmake --build build
