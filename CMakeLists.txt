@@ -1,10 +1,23 @@
 cmake_minimum_required(VERSION 3.15)
+
 project(veles C)
 
 # Set C standard and optimization flags
+
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS_RELEASE "-O3 -g -Wall -ffunction-sections -fdata-sections -DUNIX -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -DGL_GLEXT_PROTOTYPES -DVT240_NO_BUFFER -DNDEBUG")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+if (MSVC)
+    # MSVC flags
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DNOMINMAX)
+    add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+    add_definitions(-DGL_GLEXT_PROTOTYPES)
+    add_definitions(-DVT240_NO_BUFFER)
+    add_definitions(-DNDEBUG)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3 /O2 /Zi")
+else()
+    set(CMAKE_C_FLAGS_RELEASE "-O3 -g -Wall -ffunction-sections -fdata-sections -DUNIX -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -DGL_GLEXT_PROTOTYPES -DVT240_NO_BUFFER -DNDEBUG")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+endif()
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
@@ -34,8 +47,13 @@ add_library(veles_objs OBJECT ${SRC_FILES})
 # Main executable
 add_executable(veles $<TARGET_OBJECTS:veles_objs> ${GLSL_O_FILES})
 
+
 # Link libraries
-target_link_libraries(veles GL glut m)
+if (MSVC)
+    target_link_libraries(veles opengl32 freeglut)
+else()
+    target_link_libraries(veles GL glut m)
+endif()
 
 # Set output directory
 set_target_properties(veles PROPERTIES

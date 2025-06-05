@@ -1,0 +1,14 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - cmd: |
+          if [ -f build/CMakeCache.txt ]; then 
+            rm -rf build; 
+          fi
+          cmake -B build -S .
+      - cmd: |
+          cmake --build build
