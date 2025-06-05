@@ -6,7 +6,15 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 endif()
 
+
 project(veles C)
+
+# vcpkg and OpenGL/GLUT/GLEW integration
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+find_package(GLEW REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
+link_libraries(${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
 
 # Set C standard and optimization flags
 
@@ -56,12 +64,9 @@ add_library(veles_objs OBJECT ${SRC_FILES})
 add_executable(veles $<TARGET_OBJECTS:veles_objs> ${GLSL_O_FILES})
 
 
+
 # Link libraries
-if (MSVC)
-    target_link_libraries(veles opengl32 freeglut)
-else()
-    target_link_libraries(veles GL glut m)
-endif()
+target_link_libraries(veles PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
 
 # Set output directory
 set_target_properties(veles PROPERTIES

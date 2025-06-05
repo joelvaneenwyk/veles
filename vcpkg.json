@@ -1,7 +1,8 @@
 {
-    "name": "veles",
-    "version-string": "0.1.0",
-    "dependencies": [
-        "freeglut"
-    ]
+  "name": "veles",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "freeglut",
+    "glew"
+  ]
 }

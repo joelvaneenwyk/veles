@@ -8,11 +8,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#ifdef _WIN32
-#include <windows.h>
-#endif
 #include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
+int glew_initialized = 0;
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -333,14 +332,30 @@ static int cmp_u64(const void* a, const void* b)
 
 int main(int argc, char** argv)
 {
-	if(argc != 2) {
-		printf("Usage: %s file\n", *argv);
-		return 1;
+
+  // Initialize GLUT and create window first
+  if (argc != 2) {
+    printf("Usage: %s file\n", *argv);
+    return 1;
 	}
 
 	glutInit(&argc, argv);
 
-	const char* filename = argv[1];
+        // Create window before initializing GLEW
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+        glutInitWindowSize(6 * SIZE, 6 * SIZE);
+        glutCreateWindow("VELES");
+
+        // Initialize GLEW
+        GLenum glew_status = glewInit();
+        if (glew_status != GLEW_OK) {
+          fprintf(stderr, "Failed to initialize GLEW: %s\n",
+                  glewGetErrorString(glew_status));
+          return 1;
+        }
+        glew_initialized = 1;
+
+        const char* filename = argv[1];
 
 	long start_time = glutGet(GLUT_ELAPSED_TIME);
 
@@ -429,14 +444,8 @@ int main(int argc, char** argv)
 	free(frequencies);
 	free(upos);
 
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-
-	glutInitWindowSize(6 * SIZE, 6 * SIZE);
-	glutCreateWindow("VELES");
-
-	glutIgnoreKeyRepeat(1);
-
-	glutDisplayFunc(display_func);
+        glutIgnoreKeyRepeat(1);
+        glutDisplayFunc(display_func);
 	glutKeyboardFunc(kb_func);
 	glutSpecialFunc(special_func);
 	glutMouseFunc(mouse_func);
