@@ -3,3 +3,4 @@ veles
 build/
 Debug/
 Release/
+vcpkg_installed/

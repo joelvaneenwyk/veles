@@ -1,88 +1,90 @@
-
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.25)
 
 # ---- vcpkg integration ----
-if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{VCPKG_ROOT})
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 endif()
 
+project(veles LANGUAGES C)
 
-project(veles C)
-
-# vcpkg and OpenGL/GLUT/GLEW integration
+# ── Dependencies ────────────────────────────────────────────────────────────────
+find_package(FreeGLUT CONFIG REQUIRED)  # exports FreeGLUT::FreeGLUT
+find_package(GLEW CONFIG REQUIRED)      # exports GLEW::GLEW
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-find_package(GLEW REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
-link_libraries(${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
 
-# Set C standard and optimization flags
+# ── Sources ─────────────────────────────────────────────────────────────────────
+file(GLOB SRC_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.c")
+add_executable(veles ${SRC_FILES})
 
-set(CMAKE_C_STANDARD 99)
-if (MSVC)
-    # MSVC flags
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_definitions(-DNOMINMAX)
-    add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
-    add_definitions(-DGL_GLEXT_PROTOTYPES)
-    add_definitions(-DVT240_NO_BUFFER)
-    add_definitions(-DNDEBUG)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3 /O2 /Zi")
-else()
-    set(CMAKE_C_FLAGS_RELEASE "-O3 -g -Wall -ffunction-sections -fdata-sections -DUNIX -D_XOPEN_SOURCE=600 -D_DEFAULT_SOURCE -DGL_GLEXT_PROTOTYPES -DVT240_NO_BUFFER -DNDEBUG")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
-endif()
+target_include_directories(veles PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
-# Include directories
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
+# ── Compile flags / defs ────────────────────────────────────────────────────────
+target_compile_features(veles PRIVATE c_std_99)
 
-# Source files
-file(GLOB SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.c")
-file(GLOB GLSL_FILES "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
-
-
-# -- Validate GLSL shaders using glslangValidator (OpenGL, not SPIR-V) --
-find_program(GLSLANG_VALIDATOR
-             NAMES glslangValidator glslangValidator.exe)
-if(NOT GLSLANG_VALIDATOR)
-    message(FATAL_ERROR "glslangValidator not found")
-endif()
-
-set(GLSL_VALIDATED)
-foreach(GLSL ${GLSL_FILES})
-    get_filename_component(GLSL_BASENAME "${GLSL}" NAME)
-    set(VALIDATE_FILE "${CMAKE_BINARY_DIR}/glsl/${GLSL_BASENAME}.validated")
-    add_custom_command(
-        OUTPUT   "${VALIDATE_FILE}"
-        COMMAND  "${GLSLANG_VALIDATOR}" -S $<IF:$<STREQUAL:${GLSL_BASENAME}[-4:],frag>,frag,vert> -l -Od "${GLSL}" && ${CMAKE_COMMAND} -E touch "${VALIDATE_FILE}"
-        DEPENDS  "${GLSL}"
-        COMMENT  "Validating GLSL shader ${GLSL_BASENAME} (OpenGL 330, syntax only)"
-        VERBATIM
+if(MSVC)
+    target_compile_definitions(veles PRIVATE
+        _CRT_SECURE_NO_WARNINGS NOMINMAX _CRT_NONSTDC_NO_DEPRECATE
+        GL_GLEXT_PROTOTYPES VT240_NO_BUFFER NDEBUG
     )
-    list(APPEND GLSL_VALIDATED "${VALIDATE_FILE}")
-endforeach()
-add_custom_target(shaders ALL DEPENDS ${GLSL_VALIDATED})
+    target_compile_options(veles PRIVATE /W3 /O2 /Zi)
+else()
+    target_compile_definitions(veles PRIVATE
+        UNIX _XOPEN_SOURCE=600 _DEFAULT_SOURCE GL_GLEXT_PROTOTYPES
+        VT240_NO_BUFFER NDEBUG
+    )
+    target_compile_options(veles PRIVATE -O3 -g -Wall -ffunction-sections -fdata-sections)
+endif()
 
-# Object files for C sources
-add_library(veles_objs OBJECT ${SRC_FILES})
-
-# Main executable
-add_executable(veles $<TARGET_OBJECTS:veles_objs> ${GLSL_O_FILES})
-
-# Link libraries
-target_link_libraries(veles PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
-
-# Set output directory
-set_target_properties(veles PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
+# ── Linking ─────────────────────────────────────────────────────────────────────
+target_link_libraries(veles PRIVATE
+    $<IF:$<TARGET_EXISTS:FreeGLUT::freeglut>,FreeGLUT::freeglut,FreeGLUT::freeglut_static>
+    GLEW::GLEW
+    OpenGL::GL
 )
 
-# Clean target
+# ── GLSL validation (syntax-only) ───────────────────────────────────────────────
+find_program(GLSLANG_VALIDATOR NAMES glslangValidator glslangValidator.exe)
+
+if(GLSLANG_VALIDATOR)
+    file(GLOB GLSL_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/glsl")
+
+    set(GLSL_VALIDATED)
+    foreach(GLSL ${GLSL_FILES})
+        get_filename_component(NAME "${GLSL}" NAME)
+        get_filename_component(EXT  "${GLSL}" LAST_EXT)   # .frag or .vert
+
+        if(EXT STREQUAL ".frag")
+            set(STAGE frag)
+        else()
+            set(STAGE vert)
+        endif()
+
+        set(VALIDATED "${CMAKE_BINARY_DIR}/glsl/${NAME}.validated")
+
+        add_custom_command(
+            OUTPUT  "${VALIDATED}"
+            COMMAND "${GLSLANG_VALIDATOR}" -S ${STAGE} -l -Od "${GLSL}"
+            COMMAND ${CMAKE_COMMAND} -E touch "${VALIDATED}"
+            DEPENDS "${GLSL}"
+            COMMENT "Validating ${NAME} (${STAGE})"
+            VERBATIM
+        )
+        list(APPEND GLSL_VALIDATED "${VALIDATED}")
+    endforeach()
+
+    add_custom_target(shaders ALL DEPENDS ${GLSL_VALIDATED})
+    add_dependencies(veles shaders)
+else()
+    message(WARNING "glslangValidator not found – shader validation disabled")
+endif()
+
+# ── Output dir ──────────────────────────────────────────────────────────────────
+set_target_properties(veles PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+# ── Clean helper ────────────────────────────────────────────────────────────────
 add_custom_target(clean-all
-    COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/*
-    COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_SOURCE_DIR}/veles
-    COMMENT "Cleaning all build files"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/*"
+    COMMAND ${CMAKE_COMMAND} -E rm -f  "${CMAKE_SOURCE_DIR}/veles${CMAKE_EXECUTABLE_SUFFIX}"
+    COMMENT "Purging build artifacts"
 )
-
-# Optional: install target
-# install(TARGETS veles DESTINATION bin)
