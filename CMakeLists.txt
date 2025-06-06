@@ -45,42 +45,32 @@ target_link_libraries(veles PRIVATE
     OpenGL::GL
 )
 
-# ── GLSL validation (syntax-only) ───────────────────────────────────────────────
-find_program(GLSLANG_VALIDATOR NAMES glslangValidator glslangValidator.exe)
+# ── GLSL embedding ─────────────────────────────────────────────────────────────
+file(GLOB GLSL_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
 
-if(GLSLANG_VALIDATOR)
-    file(GLOB GLSL_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/glsl")
+set(GLSL_C_FILES)
+foreach(GLSL ${GLSL_FILES})
+    get_filename_component(BASENAME "${GLSL}" NAME)     # main.vert.glsl -> main.vert.glsl
+    string(REPLACE ".glsl" "" SYMBOL_NAME "${BASENAME}") # main.vert.glsl -> main.vert
+    string(REPLACE "." "_" SYMBOL_NAME "${SYMBOL_NAME}")   # main.vert -> main_vert
+    set(C_FILE "${CMAKE_BINARY_DIR}/glsl_${SYMBOL_NAME}.c") # Use glsl_ prefix to avoid conflicts
+    add_custom_command(
+        OUTPUT "${C_FILE}"
+        COMMAND ${CMAKE_COMMAND}
+                -DINPUT_FILE=${GLSL}
+                -DOUTPUT_FILE=${C_FILE}
+                -DSYMBOL_NAME=${SYMBOL_NAME}
+                -P "${CMAKE_SOURCE_DIR}/cmake/embed_file.cmake"
+        DEPENDS "${GLSL}"
+        COMMENT "Embedding ${BASENAME} as ${SYMBOL_NAME}"
+        VERBATIM
+    )
 
-    set(GLSL_VALIDATED)
-    foreach(GLSL ${GLSL_FILES})
-        get_filename_component(NAME "${GLSL}" NAME)
-        get_filename_component(EXT  "${GLSL}" LAST_EXT)   # .frag or .vert
+    list(APPEND GLSL_C_FILES "${C_FILE}")
+endforeach()
 
-        if(EXT STREQUAL ".frag")
-            set(STAGE frag)
-        else()
-            set(STAGE vert)
-        endif()
-
-        set(VALIDATED "${CMAKE_BINARY_DIR}/glsl/${NAME}.validated")
-
-        add_custom_command(
-            OUTPUT  "${VALIDATED}"
-            COMMAND "${GLSLANG_VALIDATOR}" -S ${STAGE} -l -Od "${GLSL}"
-            COMMAND ${CMAKE_COMMAND} -E touch "${VALIDATED}"
-            DEPENDS "${GLSL}"
-            COMMENT "Validating ${NAME} (${STAGE})"
-            VERBATIM
-        )
-        list(APPEND GLSL_VALIDATED "${VALIDATED}")
-    endforeach()
-
-    add_custom_target(shaders ALL DEPENDS ${GLSL_VALIDATED})
-    add_dependencies(veles shaders)
-else()
-    message(WARNING "glslangValidator not found – shader validation disabled")
-endif()
+# Add GLSL C files to the executable
+target_sources(veles PRIVATE ${GLSL_C_FILES})
 
 # ── Output dir ──────────────────────────────────────────────────────────────────
 set_target_properties(veles PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
