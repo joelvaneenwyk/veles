@@ -1,12 +1,11 @@
-#include <GL/gl.h>
-#include <GL/glew.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <GL/glew.h>
+
+#include <GL/gl.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "shader.h"
 

@@ -160,7 +160,7 @@ void display_func(void)
         glUniform1f(shader_power, (GLfloat)(power / 1000.0));
         glUniform1i(shader_palette, palette);
 
-	glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, tex_intensity);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -174,7 +174,7 @@ void display_func(void)
 
           glBindVertexArray(quad_vao);
           glDrawArrays(GL_TRIANGLES, 0, QUAD_VTX_CNT);
-	}
+        }
 
 	GL_ERROR();
 
@@ -341,40 +341,40 @@ int main(int argc, char** argv)
     return 1;
   }
 
-        glutInit(&argc, argv);
+  glutInit(&argc, argv);
 
-        // Create window before initializing GLEW
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-        glutInitWindowSize(6 * SIZE, 6 * SIZE);
-        glutCreateWindow("VELES");
+  // Create window before initializing GLEW
+  glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+  glutInitWindowSize(6 * SIZE, 6 * SIZE);
+  glutCreateWindow("VELES");
 
-        // Initialize GLEW
-        GLenum glew_status = glewInit();
-        if (glew_status != GLEW_OK) {
-          fprintf(stderr, "Failed to initialize GLEW: %s\n",
-                  glewGetErrorString(glew_status));
-          return 1;
-        }
-        glew_initialized = 1;
+  // Initialize GLEW
+  GLenum glew_status = glewInit();
+  if (glew_status != GLEW_OK) {
+    fprintf(stderr, "Failed to initialize GLEW: %s\n",
+            glewGetErrorString(glew_status));
+    return 1;
+  }
+  glew_initialized = 1;
 
-        const char *filename = argv[1];
+  const char *filename = argv[1];
 
-        long start_time = glutGet(GLUT_ELAPSED_TIME);
+  long start_time = glutGet(GLUT_ELAPSED_TIME);
 
-        u64* frequencies = (u64*) malloc(SIZE * SIZE * SIZE * sizeof(u64));
-	u64* upos = (u64*) malloc(SIZE * SIZE * SIZE * sizeof(u64));
-	positions = (float*) malloc(SIZE * SIZE * SIZE * sizeof(float));
-	intensities = (float*) malloc(SIZE * SIZE * SIZE * sizeof(float));
+  u64 *frequencies = (u64 *)malloc(SIZE * SIZE * SIZE * sizeof(u64));
+  u64 *upos = (u64 *)malloc(SIZE * SIZE * SIZE * sizeof(u64));
+  positions = (float *)malloc(SIZE * SIZE * SIZE * sizeof(float));
+  intensities = (float *)malloc(SIZE * SIZE * SIZE * sizeof(float));
 
-	memset(frequencies, 0, SIZE * SIZE * SIZE * sizeof(u64));
-	memset(upos, 0, SIZE * SIZE * SIZE * sizeof(u64));
-	memset(positions, 0, SIZE * SIZE * SIZE * sizeof(float));
-	memset(intensities, 0, SIZE * SIZE * SIZE * sizeof(float));
+  memset(frequencies, 0, SIZE * SIZE * SIZE * sizeof(u64));
+  memset(upos, 0, SIZE * SIZE * SIZE * sizeof(u64));
+  memset(positions, 0, SIZE * SIZE * SIZE * sizeof(float));
+  memset(intensities, 0, SIZE * SIZE * SIZE * sizeof(float));
 
-	struct stat statbuf;
-	if(stat(filename, &statbuf) == -1) {
-		printf("stat failed: %s\n", strerror(errno));
-		return 1;
+  struct stat statbuf;
+  if (stat(filename, &statbuf) == -1) {
+    printf("stat failed: %s\n", strerror(errno));
+    return 1;
 	}
 
 	printf("file size: %lu\n", statbuf.st_size);
@@ -429,14 +429,12 @@ int main(int argc, char** argv)
 				/* size_t idx = x + (y + z * SIZE) * SIZE; */
 				/* positions[idx] /= frequencies[idx]; */
                                 positions[idx] =
-                                    (float)((double)upos[idx] /
-                                            (double)(statbuf.st_size *
-                                                     frequencies[idx]));
-                                intensities[idx] =
-                                    (float)((double)frequencies[idx] /
-                                            (medfreq * 64));
+                                    (float)upos[idx] /
+                                    (float)(statbuf.st_size * frequencies[idx]);
+                                intensities[idx] = (float)frequencies[idx] /
+                                                   (float)(medfreq * 64);
                                 idx++;
-			}
+                        }
 		}
 	}
 
@@ -450,13 +448,13 @@ int main(int argc, char** argv)
                (unsigned long long)medfreq);
 
         free(frequencies);
-	free(upos);
+        free(upos);
 
         glutIgnoreKeyRepeat(1);
         glutDisplayFunc(display_func);
         glutKeyboardFunc(kb_func);
         glutSpecialFunc(special_func);
-	glutMouseFunc(mouse_func);
+        glutMouseFunc(mouse_func);
 	glutMotionFunc(motion_func);
 
 	const unsigned char* gl_vendor = glGetString(GL_VENDOR);
