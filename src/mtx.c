@@ -97,8 +97,8 @@ void MTX44Perspective(Mtx44* m, const float fovY, const float aspect, const floa
 {
 	float tmp;
 
-	const float angle = fovY / 360.0 * M_PI;
-	const float cot = 1.0f / tanf(angle);
+        const float angle = (float)(fovY / 360.0 * M_PI);
+        const float cot = 1.0f / tanf(angle);
 
 	m->_00 = cot / aspect;
 	m->_01 = 0.0f;

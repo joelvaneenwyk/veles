@@ -293,9 +293,9 @@ void motion_func(int x, int y)
 		}
 
 		Mtx44 rotx, roty, rot;
-		MTX44RotRad(&rotx, 'x', dy / 5.0 / 180.0 * M_PI);
-		MTX44RotRad(&roty, 'y', dx / 5.0 / 180.0 * M_PI);
-		MTX44Concat(&roty, &rotx, &rot);
+                MTX44RotRad(&rotx, 'x', (float)(dy / 5.0 / 180.0 * M_PI));
+                MTX44RotRad(&roty, 'y', (float)(dx / 5.0 / 180.0 * M_PI));
+                MTX44Concat(&roty, &rotx, &rot);
 		MTX44Concat(&rotmtx, &rot, &rotmtx);
 
 		glutPostRedisplay();
