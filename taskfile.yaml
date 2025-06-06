@@ -17,3 +17,15 @@ tasks:
           fi
       - cmd: |
           cmake --build build
+
+  glsl:
+    cmds:
+      # GLSL 3.30 syntax-only check
+      #  -S frag   = treat file as fragment shader
+      #  -l        = list generated intermediate; good for debugging
+      #  -Od       = no optimisations (faster compile); drop if you want spir-v output
+      - cmd: |
+          glslangValidator -S frag -l -Od ./glsl/main.frag.glsl
+      # vertex shader the same way
+      - cmd: |
+          glslangValidator -S vert -l -Od ./glsl/main.vert.glsl

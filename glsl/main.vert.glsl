@@ -1,20 +1,19 @@
-#version 330
+#version 330 core
 
-in vec3 position;
+// --- attributes & varyings ---
+in  vec3 position;
+out vec3 vPos;          // passed to fragment shader
 
+// --- uniforms ---
 uniform float depth;
-uniform mat4 view;
+uniform mat4  view;
 
-out vec3 pos;
-
-void main(void)
+void main()
 {
-	gl_Position = vec4(position.xyz, 1.0);
+    gl_Position = vec4(position, 1.0);
 
-	vec2 screen = (position.xy + vec2(1.0, 1.0)) / 2.0;
+    vec3 texcoords = vec3(position.xy, depth * 2.0 - 1.0);
+    vec4 world     = view * vec4(texcoords, 1.0);
 
-	vec3 texcoords = vec3(position.xy, depth * 2.0 - 1.0);
-	vec4 point = view * vec4(texcoords, 1.0);
-
-	pos = point.xyz / point.w;
+    vPos = world.xyz / world.w;  // perspective divide
 }
