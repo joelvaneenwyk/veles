@@ -1,3 +1,5 @@
 *.sw?
 veles
-build
+build/
+Debug/
+Release/

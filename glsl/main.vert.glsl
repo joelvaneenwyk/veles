@@ -1,8 +1,8 @@
 #version 330
 
-layout(location = 0) in vec3 position;
+in vec3 position;
 
-uniform float depth = 1.0;
+uniform float depth;
 uniform mat4 view;
 
 out vec3 pos;

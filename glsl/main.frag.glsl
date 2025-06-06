@@ -2,9 +2,9 @@
 
 uniform sampler3D tex_intensity;
 uniform sampler3D tex_pos;
-uniform float gain = 1.0;
-uniform float power = 1.0;
-uniform bool palette = false;
+uniform float gain;
+uniform float power;
+uniform bool palette;
 
 in  vec3 pos;
 out vec4 color;
