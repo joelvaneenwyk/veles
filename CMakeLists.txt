@@ -40,22 +40,47 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
 file(GLOB SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.c")
 file(GLOB GLSL_FILES "${CMAKE_SOURCE_DIR}/glsl/*.glsl")
 
-# Custom command to compile GLSL shaders to .glsl.o using glslangValidator and bin2o
-set(GLSL_O_FILES "")
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/glsl)
+# -- Compile GLSL → SPIR-V → .o (objcopy) --
+find_program(GLSLANG_VALIDATOR
+             NAMES glslangValidator glslangValidator.exe
+             HINTS $ENV{VULKAN_SDK}/Bin)
+if(NOT GLSLANG_VALIDATOR)
+    message(FATAL_ERROR "glslangValidator not found")
+endif()
+
+find_program(OBJCOPY
+             NAMES objcopy objcopy.exe
+             DOC "GNU objcopy (binutils)")
+if(NOT OBJCOPY)
+    message(FATAL_ERROR "objcopy not found; install GNU binutils")
+endif()
+
+set(GLSL_O_FILES)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/glsl")
+
 foreach(GLSL ${GLSL_FILES})
-    get_filename_component(GLSL_BASENAME ${GLSL} NAME)
-    string(REPLACE "." "_" GLSL_OBJNAME ${GLSL_BASENAME})
-    set(O_FILE "${CMAKE_BINARY_DIR}/glsl/${GLSL_OBJNAME}.o")
+    get_filename_component(GLSL_BASENAME "${GLSL}" NAME)
+    string(REPLACE "." "_" GLSL_OBJNAME "${GLSL_BASENAME}")
+
+    set(SPV_FILE "${CMAKE_BINARY_DIR}/glsl/${GLSL_BASENAME}.spv")
+    set(O_FILE   "${CMAKE_BINARY_DIR}/glsl/${GLSL_OBJNAME}.o")
+
     add_custom_command(
-        OUTPUT ${O_FILE}
-        COMMAND glslangValidator ${GLSL}
-        COMMAND bin2o -t -l${GLSL_OBJNAME} -i${GLSL} -o${O_FILE}
-        DEPENDS ${GLSL}
-        COMMENT "Compiling GLSL shader ${GLSL_BASENAME}"
+        OUTPUT   "${O_FILE}"
+        COMMAND  "${GLSLANG_VALIDATOR}" -V "${GLSL}" -o "${SPV_FILE}"
+        COMMAND  "${OBJCOPY}" --input-target=binary
+                              --output-target=pe-x86-64
+                              --binary-architecture i386:x86-64
+                              "${SPV_FILE}" "${O_FILE}"
+        DEPENDS  "${GLSL}"
+        COMMENT  "Compiling GLSL shader ${GLSL_BASENAME}"
+        VERBATIM
     )
-    list(APPEND GLSL_O_FILES ${O_FILE})
+
+    list(APPEND GLSL_O_FILES "${O_FILE}")
 endforeach()
+
+add_custom_target(shaders ALL DEPENDS ${GLSL_O_FILES})
 
 # Object files for C sources
 add_library(veles_objs OBJECT ${SRC_FILES})
