@@ -51,23 +51,22 @@ endif()
 set(GLSL_VALIDATED)
 foreach(GLSL ${GLSL_FILES})
     get_filename_component(GLSL_BASENAME "${GLSL}" NAME)
-    set(VALIDATE_FILE "${CMAKE_BINARY_DIR}/glsl/${GLSL_BASENAME}.validated")
-    # Use auto-stage detection for .vert, .frag, .vert.glsl, .frag.glsl, etc.
+    set(VALIDATE_FILE "${CMAKE_BINARY_DIR}/glsl/${GLSL_BASENAME}.validated")    # Use auto-stage detection for .vert, .frag, .vert.glsl, .frag.glsl, etc.
     if(GLSL_BASENAME MATCHES ".*\\.(vert|frag|tesc|tese|geom|comp|mesh|task|rgen|rint|rahit|rchit|rmiss|rcall)(\\.glsl)?$")
         add_custom_command(
             OUTPUT   "${VALIDATE_FILE}"
-            COMMAND  "${GLSLANG_VALIDATOR}" -G "${GLSL}" && ${CMAKE_COMMAND} -E touch "${VALIDATE_FILE}"
+            COMMAND  "${GLSLANG_VALIDATOR}" --target-env opengl "${GLSL}" && ${CMAKE_COMMAND} -E touch "${VALIDATE_FILE}"
             DEPENDS  "${GLSL}"
-            COMMENT  "Validating GLSL shader ${GLSL_BASENAME} (OpenGL 330, auto-stage)"
+            COMMENT  "Validating GLSL shader ${GLSL_BASENAME} (OpenGL 330, syntax only)"
             VERBATIM
         )
     else()
         # Fallback: try to guess stage from filename (legacy logic)
         add_custom_command(
             OUTPUT   "${VALIDATE_FILE}"
-            COMMAND  "${GLSLANG_VALIDATOR}" -G -S $<IF:$<STREQUAL:${GLSL_BASENAME}[-4:],frag>,frag,vert> -e main "${GLSL}" && ${CMAKE_COMMAND} -E touch "${VALIDATE_FILE}"
+            COMMAND  "${GLSLANG_VALIDATOR}" --target-env opengl -S $<IF:$<STREQUAL:${GLSL_BASENAME}[-4:],frag>,frag,vert> "${GLSL}" && ${CMAKE_COMMAND} -E touch "${VALIDATE_FILE}"
             DEPENDS  "${GLSL}"
-            COMMENT  "Validating GLSL shader ${GLSL_BASENAME} (OpenGL 330, fallback)"
+            COMMENT  "Validating GLSL shader ${GLSL_BASENAME} (OpenGL 330, syntax only)"
             VERBATIM
         )
     endif()

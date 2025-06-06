@@ -6,6 +6,9 @@ tasks:
   default:
     cmds:
       - cmd: |
+          rm -rf ./build/
+          rm -rf ./Debug/
+      - cmd: |
           export VCPKG_BIN="$(which vcpkg)"
           export VCPKG_ROOT="$(dirname "$VCPKG_BIN")/../apps/vcpkg/current"
           if ! cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"; then
