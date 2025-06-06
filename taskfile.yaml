@@ -16,7 +16,7 @@ tasks:
             cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
           fi
       - cmd: |
-          cmake --build build
+          cmake --build build --config Release
 
   glsl:
     cmds:

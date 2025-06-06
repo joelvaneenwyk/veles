@@ -8,8 +8,8 @@ endif()
 project(veles LANGUAGES C)
 
 # ── Dependencies ────────────────────────────────────────────────────────────────
-find_package(FreeGLUT CONFIG REQUIRED)  # exports FreeGLUT::FreeGLUT
-find_package(GLEW CONFIG REQUIRED)      # exports GLEW::GLEW
+find_package(FreeGLUT CONFIG REQUIRED)
+find_package(GLEW CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 
 # ── Sources ─────────────────────────────────────────────────────────────────────
