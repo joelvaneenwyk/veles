@@ -26,7 +26,10 @@ if(MSVC)
         _CRT_SECURE_NO_WARNINGS NOMINMAX _CRT_NONSTDC_NO_DEPRECATE
         GL_GLEXT_PROTOTYPES VT240_NO_BUFFER NDEBUG
     )
-    target_compile_options(veles PRIVATE /W3 /O2 /Zi)
+    target_compile_options(veles PRIVATE /W3)
+    # Only add optimization in Release builds to avoid conflict with /RTC1 in Debug
+    target_compile_options(veles PRIVATE $<$<CONFIG:Release>:/O2> $<$<CONFIG:Debug>:/Od>)
+    target_compile_options(veles PRIVATE /Zi)
 else()
     target_compile_definitions(veles PRIVATE
         UNIX _XOPEN_SOURCE=600 _DEFAULT_SOURCE GL_GLEXT_PROTOTYPES
