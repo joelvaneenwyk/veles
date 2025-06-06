@@ -4,3 +4,4 @@ build/
 Debug/
 Release/
 vcpkg_installed/
+.task/

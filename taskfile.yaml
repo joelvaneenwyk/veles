@@ -5,6 +5,16 @@ version: "3"
 tasks:
   default:
     cmds:
+      - task: run
+
+  build:
+    sources:
+      - ./CMakeLists.txt
+      - ./src/*.cpp
+      - ./glsl/*.glsl
+    generates:
+      - ./Release/veles.exe
+    cmds:
       - cmd: |
           rm -rf ./build/
           rm -rf ./Debug/
@@ -19,6 +29,8 @@ tasks:
           cmake --build build --config Release
 
   glsl:
+    sources:
+      - ./glsl/*.glsl
     cmds:
       # GLSL 3.30 syntax-only check
       #  -S frag   = treat file as fragment shader
@@ -29,3 +41,9 @@ tasks:
       # vertex shader the same way
       - cmd: |
           glslangValidator -S vert -l -Od ./glsl/main.vert.glsl
+
+  run:
+    deps: [build, glsl]
+    cmds:
+      - cmd: |
+          ./Release/veles.exe {{.CLI_ARGS | default "Release/freeglut.dll"}}
