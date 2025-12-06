@@ -22,7 +22,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev
+        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxi-dev libxrandr-dev libxxf86vm-dev libx11-dev
     
     - name: Setup vcpkg
       run: |
@@ -104,7 +104,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev glslang-tools
+        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxi-dev libxrandr-dev libxxf86vm-dev libx11-dev glslang-tools
     
     - name: Setup vcpkg for Taskfile
       run: |
