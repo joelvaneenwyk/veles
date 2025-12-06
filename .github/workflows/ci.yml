@@ -106,7 +106,7 @@ jobs:
     
     - name: Setup vcpkg for Taskfile
       run: |
-        git clone --depth 1 https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+        git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
         cd $HOME/vcpkg
         git checkout ${{ env.VCPKG_COMMIT_ID }}
         ./bootstrap-vcpkg.sh
