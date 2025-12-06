@@ -34,14 +34,17 @@ tasks:
       # CRITICAL: Platform-specific environment variable syntax
       # 
       # Unix/macOS: Use $VCPKG_ROOT (standard shell variable expansion)
-      # Windows: Use $env:VCPKG_ROOT (PowerShell environment variable syntax)
+      # Windows: Use $$env:VCPKG_ROOT (escaped $ for Task, then PowerShell syntax)
       # 
       # HISTORY OF WINDOWS SYNTAX ATTEMPTS:
       # 1. Tried: "${env:VCPKG_ROOT}" (with braces)
       #    Failed: Literal string "/scripts/buildsystems/vcpkg.cmake" - braces don't work in this context
       #    Error: "Could not find toolchain file: /scripts/buildsystems/vcpkg.cmake"
-      # 2. CURRENT: "$env:VCPKG_ROOT" (without braces)
-      #    Success: Properly expands to full path in PowerShell
+      # 2. Tried: "$env:VCPKG_ROOT" (without braces)
+      #    Failed: Task interprets $ as its own template syntax, strips "$env:", leaves ":VCPKG_ROOT"
+      #    Error: "Could not find toolchain file: :VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+      # 3. CURRENT: "$$env:VCPKG_ROOT" (escaped $ for Task)
+      #    The double $$ tells Task to pass a literal $ to PowerShell, which then evaluates $env:VCPKG_ROOT
       # 
       # NOTE: VCPKG_ROOT must be set in environment before running task
       # - In CI: Set explicitly in workflow env section
@@ -54,7 +57,7 @@ tasks:
       #   Problem: $HOME not expanded when passed as env var, inconsistent setup
       - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         platforms: [linux, darwin]
-      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         platforms: [windows]
       
       # Build with CMake
