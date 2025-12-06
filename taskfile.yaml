@@ -47,7 +47,4 @@ tasks:
   run:
     deps: [build, glsl]
     cmds:
-      - cmd: ./veles {{.CLI_ARGS}}
-        platforms: [linux, darwin]
-      - cmd: .\veles.exe {{.CLI_ARGS}}
-        platforms: [windows]
+      - cmd: ./veles{{exeExt}} {{.CLI_ARGS}}
