@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  VCPKG_COMMIT_ID: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+  VCPKG_COMMIT_ID: '01f602195983451bc83e72f4214af2cbc495aa94'
 
 jobs:
   cmake-linux:
