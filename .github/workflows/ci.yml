@@ -8,6 +8,11 @@ on:
   workflow_dispatch:
 
 env:
+  # IMPORTANT: This vcpkg commit ID must be kept up to date
+  # Previous commit ceaa240e3e1dd0a8416b2d89e06fd710c50b4140 caused build failures with:
+  #   - msys2 runtime packages returning 404 errors
+  #   - Unable to download https://mirror.msys2.org/msys/x86_64/msys2-runtime-3.4.10-4-x86_64.pkg.tar.zst
+  # Current commit 74e6536215718009aae747d86d84b78376bf9e09 resolves these issues
   VCPKG_COMMIT_ID: '74e6536215718009aae747d86d84b78376bf9e09'
 
 jobs:
@@ -58,6 +63,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    # Using lukka/run-vcpkg@v11 for Windows because it handles vcpkg bootstrapping automatically
+    # CRITICAL: Must specify vcpkgDirectory parameter
+    # Without vcpkgDirectory, the action expects vcpkg to be a git submodule which we don't use
+    # Previous error: "pathspec 'D:\a\veles\veles\vcpkg' did not match any file(s) known to git"
+    # Solution: Explicitly set vcpkgDirectory to download vcpkg to workspace instead
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
@@ -107,6 +117,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxi-dev libxrandr-dev libxxf86vm-dev libx11-dev glslang-tools
     
+    # Setup vcpkg manually for Linux taskfile builds
+    # NOTE: Clone to workspace directory (vcpkg), not $HOME/vcpkg
+    # Previous approach used $HOME/vcpkg which caused issues with VCPKG_ROOT expansion
+    # The environment variable $HOME/vcpkg was passed literally without shell expansion
     - name: Setup vcpkg for Taskfile
       run: |
         git clone https://github.com/microsoft/vcpkg.git vcpkg
@@ -114,6 +128,10 @@ jobs:
         git checkout ${{ env.VCPKG_COMMIT_ID }}
         ./bootstrap-vcpkg.sh
     
+    # IMPORTANT: Must explicitly set VCPKG_ROOT environment variable
+    # Previous error: "Could not find toolchain file: $HOME/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    # The taskfile expects VCPKG_ROOT to be set and will use it in cmake commands
+    # Using ${{ github.workspace }}/vcpkg ensures proper path expansion
     - name: Build with Task
       run: task build
       env:
@@ -141,12 +159,32 @@ jobs:
       run: |
         choco install go-task -y
         
+    # Using lukka/run-vcpkg@v11 for consistency with cmake-windows job
+    # CRITICAL: Must specify vcpkgDirectory parameter (see cmake-windows comments)
+    # This action automatically sets VCPKG_ROOT environment variable for subsequent steps
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
         vcpkgDirectory: ${{ github.workspace }}/vcpkg
     
+    # Install glslangValidator for GLSL shader validation
+    # HISTORY OF ATTEMPTS:
+    # 1. Tried: choco install glslang -y
+    #    Failed: Package 'glslang' does not exist in Chocolatey repository
+    # 2. Tried: Download from https://github.com/KhronosGroup/glslang/releases/download/14.3.0/glslang-master-windows-x64-Release.zip
+    #    Failed: URL returns 404 - this release asset doesn't exist
+    # 3. CURRENT: Download prebuilt binary from known working source
+    #    Source: https://raw.githubusercontent.com/HansKristian-Work/vkd3d-proton-ci/main/glslangValidator.exe
+    #    Used by other projects (e.g., Chisel: https://github.com/AlpyneDreams/Chisel)
+    # NOTE: While downloading from third-party repo has security implications, this is:
+    #   - A validation tool only (not part of production binary)
+    #   - Used by established open-source projects
+    #   - The most pragmatic solution given official release structure
+    # ALTERNATIVES CONSIDERED:
+    #   - Building from source: Too slow for CI, adds significant complexity
+    #   - Vulkan SDK: Too large, overkill for just glslangValidator
+    #   - Official releases: Don't provide standalone Windows executables in accessible format
     - name: Install glslangValidator
       run: |
         $dest = "$Env:RUNNER_TEMP\glslangValidator.exe"
@@ -155,6 +193,11 @@ jobs:
           -OutFile $dest
         echo "$Env:RUNNER_TEMP" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         
+    # IMPORTANT: Explicitly set VCPKG_ROOT for consistency with Linux taskfile job
+    # While lukka/run-vcpkg sets VCPKG_ROOT automatically, being explicit:
+    #   - Makes configuration more obvious and maintainable
+    #   - Matches the Linux taskfile-linux job pattern
+    #   - Prevents relying on implicit behavior that might change
     - name: Build with Task
       run: task build
       env:
