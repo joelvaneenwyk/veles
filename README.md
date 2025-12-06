@@ -12,16 +12,52 @@ data size and even large input files can be visualized without problems.
 System Requirements
 -------------------
 
-- Linux (may or may not work on other OS to, but only Linux is tested for now)
-- gcc, make
+- Linux, Windows 11, or macOS (confirmed working on Linux and Windows 11)
+- Build tools:
+  - **Option 1 (CMake)**: CMake 3.25+, vcpkg (for dependency management)
+  - **Option 2 (Make)**: gcc, make, [bin2o](https://github.com/hackyourlife/bin2o)
+  - **Optional**: [Task](https://taskfile.dev) (modern task runner/build tool)
 - OpenGL 3.3+
-- freeglut
-- glslang
-- [bin2o](https://github.com/hackyourlife/bin2o)
+- Dependencies (automatically managed by vcpkg when using CMake):
+  - FreeGLUT
+  - GLEW
+  - OpenGL
+- For shader validation (optional): glslang
 
 
 Building
 --------
+
+There are three ways to build Veles:
+
+### Option 1: Using CMake (Recommended for Windows and cross-platform)
+
+1. Install [vcpkg](https://vcpkg.io/) and set the `VCPKG_ROOT` environment variable
+2. Configure and build:
+   ```bash
+   cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+   cmake --build build --config Release
+   ```
+
+The executable will be placed in the project root directory.
+
+### Option 2: Using Taskfile (Simplified build automation)
+
+1. Install [Task](https://taskfile.dev) and vcpkg (if not already installed)
+2. Run the build task:
+   ```bash
+   task build
+   ```
+
+The Taskfile provides convenient commands:
+- `task build` - Build the project using CMake
+- `task glsl` - Validate GLSL shader syntax
+- `task run` - Build and run the application
+- `task` (default) - Runs the default task (currently `run`)
+
+### Option 3: Using Make (Traditional Linux build)
+
+Requirements: gcc, make, [bin2o](https://github.com/hackyourlife/bin2o), system-installed OpenGL libraries
 
 Just run `make` and you will get a `veles` binary that you can run.
 
