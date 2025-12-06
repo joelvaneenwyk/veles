@@ -62,6 +62,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+        vcpkgDirectory: ${{ github.workspace }}/vcpkg
     
     - name: Configure CMake
       run: |
@@ -144,6 +145,7 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+        vcpkgDirectory: ${{ github.workspace }}/vcpkg
     
     - name: Install glslangValidator
       run: |
