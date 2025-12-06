@@ -81,4 +81,4 @@ tasks:
       # HISTORY: Previously had platform-specific commands (./veles vs .\veles.exe)
       # CURRENT: Single command using {{exeExt}} template works on all platforms
       # NOTE: On Windows, ./veles.exe works fine (PowerShell accepts forward slashes)
-      - cmd: ./veles{{exeExt}} {{.CLI_ARGS}}
+      - cmd: ./veles{{exeExt}} ./veles{{exeExt}} {{.CLI_ARGS}}
