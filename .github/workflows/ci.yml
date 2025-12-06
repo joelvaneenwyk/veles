@@ -9,7 +9,6 @@ on:
 
 env:
   VCPKG_COMMIT_ID: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
-  VCPKG_PACKAGES_WINDOWS: 'freeglut:x64-windows glew:x64-windows opengl:x64-windows'
 
 jobs:
   cmake-linux:
@@ -31,10 +30,6 @@ jobs:
         cd $HOME/vcpkg
         git checkout ${{ env.VCPKG_COMMIT_ID }}
         ./bootstrap-vcpkg.sh
-        
-    - name: Install dependencies with vcpkg
-      run: |
-        $HOME/vcpkg/vcpkg install freeglut glew opengl
     
     - name: Configure CMake
       run: |
@@ -68,10 +63,6 @@ jobs:
       with:
         vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
     
-    - name: Install dependencies with vcpkg
-      run: |
-        vcpkg install ${{ env.VCPKG_PACKAGES_WINDOWS }}
-      
     - name: Configure CMake
       run: |
         cmake -B build -S . `
@@ -121,11 +112,7 @@ jobs:
         cd $HOME/vcpkg
         git checkout ${{ env.VCPKG_COMMIT_ID }}
         ./bootstrap-vcpkg.sh
-        
-    - name: Install dependencies with vcpkg
-      run: |
-        $HOME/vcpkg/vcpkg install freeglut glew opengl
-        
+    
     - name: Build with Task
       run: task build
       env:
@@ -158,10 +145,6 @@ jobs:
       with:
         vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
     
-    - name: Install dependencies with vcpkg
-      run: |
-        vcpkg install ${{ env.VCPKG_PACKAGES_WINDOWS }}
-        
     - name: Install glslangValidator
       run: |
         choco install glslang -y
