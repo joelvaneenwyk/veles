@@ -25,7 +25,7 @@ tasks:
       # Configure with CMake - VCPKG_ROOT should be set by environment or lukka/run-vcpkg
       - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         platforms: [linux, darwin]
-      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         platforms: [windows]
       # Build with CMake
       - cmd: cmake --build build --config Release

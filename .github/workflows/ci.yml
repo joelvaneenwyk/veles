@@ -157,6 +157,8 @@ jobs:
         
     - name: Build with Task
       run: task build
+      env:
+        VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     
     - name: Verify executable
       run: |
