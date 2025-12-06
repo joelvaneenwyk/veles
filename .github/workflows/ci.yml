@@ -9,7 +9,6 @@ on:
 
 env:
   VCPKG_COMMIT_ID: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
-  LINUX_PACKAGES: 'build-essential cmake libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libglew-dev'
   VCPKG_PACKAGES_WINDOWS: 'freeglut:x64-windows glew:x64-windows opengl:x64-windows'
 
 jobs:
@@ -21,14 +20,26 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y ${{ env.LINUX_PACKAGES }}
+        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev
+    
+    - name: Setup vcpkg
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+        cd $HOME/vcpkg
+        git checkout ${{ env.VCPKG_COMMIT_ID }}
+        ./bootstrap-vcpkg.sh
+        
+    - name: Install dependencies with vcpkg
+      run: |
+        $HOME/vcpkg/vcpkg install freeglut glew opengl
     
     - name: Configure CMake
       run: |
         cmake -B build -S . \
+          -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake \
           -DCMAKE_BUILD_TYPE=Release
     
     - name: Build
@@ -102,7 +113,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y ${{ env.LINUX_PACKAGES }} glslang-tools
+        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev glslang-tools
     
     - name: Setup vcpkg for Taskfile
       run: |
