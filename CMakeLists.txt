@@ -73,7 +73,15 @@ endforeach()
 target_sources(veles PRIVATE ${GLSL_C_FILES})
 
 # ── Output dir ──────────────────────────────────────────────────────────────────
+# For single-config generators (Unix Makefiles, Ninja)
 set_target_properties(veles PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+# For multi-config generators (Visual Studio, Xcode)
+if(CMAKE_CONFIGURATION_TYPES)
+    foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER ${CONFIG} CONFIG_UPPER)
+        set_target_properties(veles PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER} "${CMAKE_SOURCE_DIR}")
+    endforeach()
+endif()
 
 # ── Clean helper ────────────────────────────────────────────────────────────────
 add_custom_target(clean-all

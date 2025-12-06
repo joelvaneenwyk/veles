@@ -10,10 +10,10 @@ tasks:
   build:
     sources:
       - ./CMakeLists.txt
-      - ./src/*.cpp
+      - ./src/*.c
       - ./glsl/*.glsl
     generates:
-      - ./Release/veles.exe
+      - ./veles
     cmds:
       - cmd: |
           rm -rf ./build/
@@ -51,4 +51,4 @@ tasks:
     deps: [build, glsl]
     cmds:
       - cmd: |
-          ./Release/veles.exe {{.CLI_ARGS | default "Release/freeglut.dll"}}
+          ./veles {{.CLI_ARGS}}
