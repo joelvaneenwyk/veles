@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  VCPKG_COMMIT_ID: '01f602195983451bc83e72f4214af2cbc495aa94'
+  VCPKG_COMMIT_ID: 'ceaa240e3e1dd0a8416b2d89e06fd710c50b4140'
 
 jobs:
   cmake-linux:
@@ -154,9 +154,9 @@ jobs:
     
     - name: Verify executable
       run: |
-        if (Test-Path ".\Release\veles.exe") {
+        if (Test-Path ".\veles.exe") {
           Write-Host "✓ Executable built successfully"
-          Get-Item .\Release\veles.exe | Format-List
+          Get-Item .\veles.exe | Format-List
         } else {
           Write-Host "✗ Executable not found"
           exit 1
