@@ -34,16 +34,38 @@ There are three ways to build Veles:
 
 1. Install [vcpkg](https://vcpkg.io/) and set the `VCPKG_ROOT` environment variable
 2. Configure and build:
+
+   > **Note:** The syntax for referencing the `VCPKG_ROOT` environment variable depends on your shell:
+   > - **Bash/Linux/macOS:** `$VCPKG_ROOT`
+   > - **Windows PowerShell:** `$env:VCPKG_ROOT`
+   > - **Windows CMD:** `%VCPKG_ROOT%`
+
+   Use the appropriate command for your shell:
+
+   **Bash/Linux/macOS:**
    ```bash
    cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
    cmake --build build --config Release
    ```
 
-The executable will be placed in the project root directory.
+   **Windows PowerShell:**
+   ```powershell
+   cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+   cmake --build build --config Release
+   ```
+
+   **Windows CMD:**
+   ```cmd
+   cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
+   cmake --build build --config Release
+   ```
+
+The executable will be placed in the project root directory as `veles` (or `veles.exe` on Windows).
 
 ### Option 2: Using Taskfile (Simplified build automation)
+*(Note: The configuration file is named `taskfile.yaml` in the project root.)*
 
-1. Install [Task](https://taskfile.dev) and vcpkg (if not already installed)
+1. Install [Task](https://taskfile.dev) and vcpkg (if not already installed). See Option 1 above for vcpkg installation instructions and setting the `VCPKG_ROOT` environment variable. The Taskfile will attempt to auto-detect vcpkg, but manual setup may be required if detection fails.
 2. Run the build task:
    ```bash
    task build
@@ -51,8 +73,8 @@ The executable will be placed in the project root directory.
 
 The Taskfile provides convenient commands:
 - `task build` - Build the project using CMake
-- `task glsl` - Validate GLSL shader syntax
-- `task run` - Build and run the application
+- `task glsl` - Validate GLSL shader syntax (automatically run as part of `task run`; only needed if you want to validate shaders separately)
+- `task run` - Build and run the application (runs shader validation first)
 - `task` (default) - Runs the default task (currently `run`)
 
 ### Option 3: Using Make (Traditional Linux build)
