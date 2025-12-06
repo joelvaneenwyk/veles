@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  cmake-linux:
+    name: CMake Build (Linux)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          freeglut3-dev \
+          libglew-dev
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . \
+          -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: cmake --build build --config Release
+    
+    - name: Verify executable
+      run: |
+        if [ -f "./veles" ]; then
+          echo "✓ Executable built successfully"
+          ls -lh ./veles
+        else
+          echo "✗ Executable not found"
+          exit 1
+        fi
+
+  cmake-windows:
+    name: CMake Build (Windows)
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+    
+    - name: Install dependencies with vcpkg
+      run: |
+        vcpkg install freeglut:x64-windows glew:x64-windows opengl:x64-windows
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . `
+          -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+          -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: cmake --build build --config Release
+    
+    - name: Verify executable
+      run: |
+        if (Test-Path ".\veles.exe") {
+          Write-Host "✓ Executable built successfully"
+          Get-Item .\veles.exe | Format-List
+        } else {
+          Write-Host "✗ Executable not found"
+          exit 1
+        }
+
+  taskfile-linux:
+    name: Taskfile Build (Linux)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Task
+      run: |
+        sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          freeglut3-dev \
+          libglew-dev \
+          glslang-tools
+    
+    - name: Setup vcpkg for Taskfile
+      run: |
+        git clone --depth 1 https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+        $HOME/vcpkg/bootstrap-vcpkg.sh
+        echo "$HOME/vcpkg" >> $GITHUB_PATH
+        
+    - name: Install dependencies with vcpkg
+      run: |
+        $HOME/vcpkg/vcpkg install freeglut glew opengl
+        
+    - name: Build with Task
+      run: task build
+      env:
+        VCPKG_ROOT: ${{ env.HOME }}/vcpkg
+    
+    - name: Verify executable
+      run: |
+        if [ -f "./Release/veles.exe" ] || [ -f "./veles" ]; then
+          echo "✓ Executable built successfully"
+          ls -lh ./Release/veles.exe 2>/dev/null || ls -lh ./veles
+        else
+          echo "✗ Executable not found"
+          exit 1
+        fi
+
+  taskfile-windows:
+    name: Taskfile Build (Windows)
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Task
+      run: |
+        choco install go-task -y
+        
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+    
+    - name: Install dependencies with vcpkg
+      run: |
+        vcpkg install freeglut:x64-windows glew:x64-windows opengl:x64-windows
+        
+    - name: Install glslangValidator
+      run: |
+        choco install glslang -y
+        
+    - name: Build with Task
+      shell: bash
+      run: |
+        export VCPKG_ROOT="${VCPKG_ROOT}"
+        task build
+    
+    - name: Verify executable
+      run: |
+        if (Test-Path ".\Release\veles.exe") {
+          Write-Host "✓ Executable built successfully"
+          Get-Item .\Release\veles.exe | Format-List
+        } else {
+          Write-Host "✗ Executable not found"
+          exit 1
+        }
