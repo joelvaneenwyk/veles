@@ -13,25 +13,22 @@ tasks:
       - ./src/*.c
       - ./glsl/*.glsl
     generates:
-      - ./veles
+      - ./veles{{exeExt}}
+    platforms:
+      - linux
+      - darwin
+      - windows
     cmds:
-      - cmd: |
-          rm -rf ./build/
-          rm -rf ./Debug/
-      - cmd: |
-          if [ -n "$VCPKG_ROOT" ]; then
-            TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-          else
-            export VCPKG_BIN="$(which vcpkg)"
-            export VCPKG_ROOT="$(dirname "$VCPKG_BIN")/../apps/vcpkg/current"
-            TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-          fi
-          if ! cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"; then
-            rm -rf build
-            cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
-          fi
-      - cmd: |
-          cmake --build build --config Release
+      # Clean old build artifacts using cmake -E (cross-platform)
+      - cmd: cmake -E rm -rf ./build/ ./Debug/
+        ignore_error: true
+      # Configure with CMake - VCPKG_ROOT should be set by environment or lukka/run-vcpkg
+      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+        platforms: [linux, darwin]
+      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        platforms: [windows]
+      # Build with CMake
+      - cmd: cmake --build build --config Release
 
   glsl:
     sources:
@@ -50,5 +47,7 @@ tasks:
   run:
     deps: [build, glsl]
     cmds:
-      - cmd: |
-          ./veles {{.CLI_ARGS}}
+      - cmd: ./veles {{.CLI_ARGS}}
+        platforms: [linux, darwin]
+      - cmd: .\veles.exe {{.CLI_ARGS}}
+        platforms: [windows]
