@@ -7,6 +7,11 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+env:
+  VCPKG_COMMIT_ID: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+  LINUX_PACKAGES: 'build-essential cmake libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libglew-dev'
+  VCPKG_PACKAGES_WINDOWS: 'freeglut:x64-windows glew:x64-windows opengl:x64-windows'
+
 jobs:
   cmake-linux:
     name: CMake Build (Linux)
@@ -19,13 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          cmake \
-          libgl1-mesa-dev \
-          libglu1-mesa-dev \
-          freeglut3-dev \
-          libglew-dev
+        sudo apt-get install -y ${{ env.LINUX_PACKAGES }}
     
     - name: Configure CMake
       run: |
@@ -56,11 +55,11 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+        vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
     
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg install freeglut:x64-windows glew:x64-windows opengl:x64-windows
+        vcpkg install ${{ env.VCPKG_PACKAGES_WINDOWS }}
       
     - name: Configure CMake
       run: |
@@ -73,7 +72,10 @@ jobs:
     
     - name: Verify executable
       run: |
-        if (Test-Path ".\veles.exe") {
+        if (Test-Path ".\build\Release\veles.exe") {
+          Write-Host "✓ Executable built successfully"
+          Get-Item .\build\Release\veles.exe | Format-List
+        } elseif (Test-Path ".\veles.exe") {
           Write-Host "✓ Executable built successfully"
           Get-Item .\veles.exe | Format-List
         } else {
@@ -91,25 +93,23 @@ jobs:
       
     - name: Install Task
       run: |
-        sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+        TASK_VERSION="v3.35.0"
+        curl -sSL "https://github.com/go-task/task/releases/download/${TASK_VERSION}/task_linux_amd64.tar.gz" -o task.tar.gz
+        tar -xzf task.tar.gz
+        sudo mv task /usr/local/bin/task
+        sudo chmod +x /usr/local/bin/task
         
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          cmake \
-          libgl1-mesa-dev \
-          libglu1-mesa-dev \
-          freeglut3-dev \
-          libglew-dev \
-          glslang-tools
+        sudo apt-get install -y ${{ env.LINUX_PACKAGES }} glslang-tools
     
     - name: Setup vcpkg for Taskfile
       run: |
         git clone --depth 1 https://github.com/microsoft/vcpkg.git $HOME/vcpkg
-        $HOME/vcpkg/bootstrap-vcpkg.sh
-        echo "$HOME/vcpkg" >> $GITHUB_PATH
+        cd $HOME/vcpkg
+        git checkout ${{ env.VCPKG_COMMIT_ID }}
+        ./bootstrap-vcpkg.sh
         
     - name: Install dependencies with vcpkg
       run: |
@@ -118,13 +118,13 @@ jobs:
     - name: Build with Task
       run: task build
       env:
-        VCPKG_ROOT: ${{ env.HOME }}/vcpkg
+        VCPKG_ROOT: $HOME/vcpkg
     
     - name: Verify executable
       run: |
-        if [ -f "./Release/veles.exe" ] || [ -f "./veles" ]; then
+        if [ -f "./veles" ]; then
           echo "✓ Executable built successfully"
-          ls -lh ./Release/veles.exe 2>/dev/null || ls -lh ./veles
+          ls -lh ./veles
         else
           echo "✗ Executable not found"
           exit 1
@@ -145,21 +145,18 @@ jobs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+        vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
     
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg install freeglut:x64-windows glew:x64-windows opengl:x64-windows
+        vcpkg install ${{ env.VCPKG_PACKAGES_WINDOWS }}
         
     - name: Install glslangValidator
       run: |
         choco install glslang -y
         
     - name: Build with Task
-      shell: bash
-      run: |
-        export VCPKG_ROOT="${VCPKG_ROOT}"
-        task build
+      run: task build
     
     - name: Verify executable
       run: |
