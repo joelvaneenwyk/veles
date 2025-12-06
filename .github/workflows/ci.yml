@@ -9,6 +9,7 @@ on:
 
 env:
   VCPKG_COMMIT_ID: '74e6536215718009aae747d86d84b78376bf9e09'
+  GLSLANG_VERSION: '14.3.0'
 
 jobs:
   cmake-linux:
@@ -149,8 +150,7 @@ jobs:
     
     - name: Install glslangValidator
       run: |
-        $GLSLANG_VERSION = "14.3.0"
-        $url = "https://github.com/KhronosGroup/glslang/releases/download/$GLSLANG_VERSION/glslang-master-windows-x64-Release.zip"
+        $url = "https://github.com/KhronosGroup/glslang/releases/download/${{ env.GLSLANG_VERSION }}/glslang-master-windows-x64-Release.zip"
         Invoke-WebRequest -Uri $url -OutFile glslang.zip
         Expand-Archive -Path glslang.zip -DestinationPath glslang
         $env:PATH = "$pwd\glslang\bin;$env:PATH"
