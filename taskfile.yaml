@@ -19,11 +19,16 @@ tasks:
           rm -rf ./build/
           rm -rf ./Debug/
       - cmd: |
-          export VCPKG_BIN="$(which vcpkg)"
-          export VCPKG_ROOT="$(dirname "$VCPKG_BIN")/../apps/vcpkg/current"
-          if ! cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"; then
+          if [ -n "$VCPKG_ROOT" ]; then
+            TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+          else
+            export VCPKG_BIN="$(which vcpkg)"
+            export VCPKG_ROOT="$(dirname "$VCPKG_BIN")/../apps/vcpkg/current"
+            TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+          fi
+          if ! cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"; then
             rm -rf build
-            cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+            cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
           fi
       - cmd: |
           cmake --build build --config Release

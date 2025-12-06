@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  VCPKG_COMMIT_ID: 'c8696863d371ab7f46e213d8f5ca923c4aef2a00'
+  VCPKG_COMMIT_ID: '01f602195983451bc83e72f4214af2cbc495aa94'
 
 jobs:
   cmake-linux:
@@ -22,7 +22,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev
+        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxi-dev libxrandr-dev libxxf86vm-dev libx11-dev
     
     - name: Setup vcpkg
       run: |
@@ -104,7 +104,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev glslang-tools
+        sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxi-dev libxrandr-dev libxxf86vm-dev libx11-dev glslang-tools
     
     - name: Setup vcpkg for Taskfile
       run: |
