@@ -29,34 +29,31 @@ tasks:
       # ignore_error: true ensures build continues even if directories don't exist
       - cmd: cmake -E rm -rf ./build/ ./Debug/
         ignore_error: true
-      
+
       # Configure with CMake using vcpkg toolchain
       # CRITICAL: Platform-specific environment variable syntax
-      # 
+      #
       # Unix/macOS: Use $VCPKG_ROOT (standard shell variable expansion)
       # Windows: Use $env:VCPKG_ROOT (PowerShell environment variable syntax)
-      # 
+      #
       # HISTORY OF WINDOWS SYNTAX ATTEMPTS:
       # 1. Tried: "${env:VCPKG_ROOT}" (with braces)
       #    Failed: Literal string "/scripts/buildsystems/vcpkg.cmake" - braces don't work in this context
       #    Error: "Could not find toolchain file: /scripts/buildsystems/vcpkg.cmake"
       # 2. CURRENT: "$env:VCPKG_ROOT" (without braces)
       #    Success: Properly expands to full path in PowerShell
-      # 
+      #
       # NOTE: VCPKG_ROOT must be set in environment before running task
       # - In CI: Set explicitly in workflow env section
       # - Locally: Set manually or via lukka/run-vcpkg action
-      # 
+      #
       # PREVIOUS APPROACHES THAT FAILED:
       # - Auto-detection with: export VCPKG_BIN="$(which vcpkg)"
       #   Problem: Unreliable, complex shell logic, platform-specific
       # - Using $HOME/vcpkg hardcoded path
       #   Problem: $HOME not expanded when passed as env var, inconsistent setup
       - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-        platforms: [linux, darwin]
-      - cmd: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-        platforms: [windows]
-      
+
       # Build with CMake
       # --config Release ensures Release build even on multi-config generators (MSVC)
       - cmd: cmake --build build --config Release
